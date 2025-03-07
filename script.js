@@ -2,9 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const sendButton = document.getElementById('send-button');
     const messageText = document.getElementById('message-text');
     const messagesList = document.getElementById('messages').querySelector('ul');
-    const updateButton = document.createElement('button');
-    updateButton.textContent = 'Update Messages';
-    document.getElementById('messages').parentNode.insertBefore(updateButton, document.getElementById('messages').nextSibling);
+    const updateButton = document.getElementById('update-button');
 
     let msgs = [
         { "msg" : "Hello World", "pseudo": "John", "date": new Date() },
