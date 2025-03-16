@@ -56,8 +56,24 @@ app.get('/cpt/inc', function(req, res) {
 });
 
 // Phase 1.4: Implement message management routes
-// Initialize messages array with some sample messages
-var allMsgs = ["Hello World", "foobar", "CentraleSupelec Forever"];
+// Initialize messages array with some sample messages with metadata
+var allMsgs = [
+  { 
+    "msg": "Hello World", 
+    "pseudo": "System", 
+    "date": new Date().toISOString() 
+  },
+  { 
+    "msg": "foobar", 
+    "pseudo": "System", 
+    "date": new Date().toISOString() 
+  },
+  { 
+    "msg": "CentraleSupelec Forever", 
+    "pseudo": "System", 
+    "date": new Date().toISOString() 
+  }
+];
 
 // Route to get a specific message by index
 app.get('/msg/get/*', function(req, res) {
@@ -86,13 +102,46 @@ app.get('/msg/nber', function(req, res) {
 // Route to post a new message
 app.get('/msg/post/*', function(req, res) {
   // Extract the message from the URL
-  const message = unescape(req.url.split('/msg/post/')[1]);
+  const messagePath = req.url.split('/msg/post/')[1];
+  
+  // Check if there are query parameters for pseudo
+  const pseudo = req.query.pseudo || "Anonymous";
+  
+  // Create a message object with metadata
+  const messageObj = {
+    "msg": unescape(messagePath),
+    "pseudo": pseudo,
+    "date": new Date().toISOString()
+  };
   
   // Add the message to the array
-  allMsgs.push(message);
+  allMsgs.push(messageObj);
   
   // Return the index of the new message
   res.json(allMsgs.length - 1);
+});
+
+// Enhanced route to post a message with JSON payload
+app.post('/msg/post', express.json(), function(req, res) {
+  // Extract message data from request body
+  const { msg, pseudo } = req.body;
+  
+  if (!msg) {
+    return res.status(400).json({ "code": -1, "error": "Message content is required" });
+  }
+  
+  // Create a message object with metadata
+  const messageObj = {
+    "msg": msg,
+    "pseudo": pseudo || "Anonymous",
+    "date": new Date().toISOString()
+  };
+  
+  // Add the message to the array
+  allMsgs.push(messageObj);
+  
+  // Return the index of the new message
+  res.json({ "code": 0, "index": allMsgs.length - 1 });
 });
 
 // Route to delete a message

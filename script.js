@@ -23,9 +23,21 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateUI(messages) {
         messagesList.innerHTML = ''; // Clear the list
         
-        messages.forEach(function(msg, index) {
+        messages.forEach(function(msgObj, index) {
             const li = document.createElement('li');
-            li.textContent = 'Message ' + index + ': ' + msg;
+            
+            // Handle both string messages and object messages with metadata
+            if (typeof msgObj === 'string') {
+                li.textContent = 'Message ' + index + ': ' + msgObj;
+            } else {
+                // Format the date
+                const date = new Date(msgObj.date);
+                const formattedDate = date.toLocaleTimeString() + ' ' + date.toLocaleDateString();
+                
+                // Create the message text with metadata
+                li.textContent = msgObj.pseudo + ': ' + msgObj.msg + ' (' + formattedDate + ')';
+            }
+            
             messagesList.appendChild(li);
         });
     }
@@ -58,8 +70,19 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log('Message sent:', message);
         
+        // Get the username (prompt the user if not already set)
+        let username = localStorage.getItem('messageBoardUsername');
+        if (!username) {
+            username = prompt('Enter your username:', 'Anonymous');
+            if (username) {
+                localStorage.setItem('messageBoardUsername', username);
+            } else {
+                username = 'Anonymous';
+            }
+        }
+        
         // Send the message to the server
-        fetch(serviceUrl + '/msg/post/' + encodeURIComponent(message))
+        fetch(serviceUrl + '/msg/post/' + encodeURIComponent(message) + '?pseudo=' + encodeURIComponent(username))
             .then(function(response) {
                 return response.json();
             })
@@ -88,6 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const urlInput = prompt('Enter the microservice URL:', serviceUrl);
         if (urlInput && urlInput.trim() !== '') {
             window.serviceUrl = urlInput.trim();
+            localStorage.setItem('messageBoardServiceUrl', window.serviceUrl);
             alert('Service URL updated to: ' + window.serviceUrl);
             
             // Refresh messages from the new URL
@@ -98,9 +122,38 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Function to set or change username
+    function setUsername() {
+        const currentUsername = localStorage.getItem('messageBoardUsername') || 'Anonymous';
+        const username = prompt('Enter your username:', currentUsername);
+        if (username && username.trim() !== '') {
+            localStorage.setItem('messageBoardUsername', username.trim());
+            alert('Username updated to: ' + username.trim());
+        }
+    }
+    
     // Add a button for configuring the service URL
     const configButton = document.createElement('button');
     configButton.textContent = 'Configure Service URL';
     configButton.addEventListener('click', setServiceUrl);
     document.getElementById('controls').appendChild(configButton);
+    
+    // Add a button for setting username
+    const usernameButton = document.createElement('button');
+    usernameButton.textContent = 'Set Username';
+    usernameButton.addEventListener('click', setUsername);
+    document.getElementById('controls').appendChild(usernameButton);
+    
+    // Check if we have a saved service URL
+    const savedServiceUrl = localStorage.getItem('messageBoardServiceUrl');
+    if (savedServiceUrl) {
+        window.serviceUrl = savedServiceUrl;
+        console.log('Using saved service URL:', window.serviceUrl);
+        
+        // Refresh messages from the saved URL
+        fetchMessages()
+            .then(function(messages) {
+                updateUI(messages);
+            });
+    }
 });
