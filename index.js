@@ -1,6 +1,7 @@
 // Import the express module
 const express = require('express');
 const app = express();
+const port = process.env.PORT || 8080;
 
 // Enable CORS for all routes
 app.use(function(req, res, next) {
@@ -13,9 +14,9 @@ app.use(function(req, res, next) {
 app.use(express.static('.'));
 
 // Start the server
-app.listen(8080, function() {
-  console.log('App listening on port 8080!');
-});
+app.listen(port, function() {
+  console.log(`App listening on port ${port}!`);
+})
 
 // Phase 1.2: Implement /test/* route
 app.get('/test/*', function(req, res) {
