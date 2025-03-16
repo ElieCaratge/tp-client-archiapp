@@ -5,11 +5,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const updateButton = document.getElementById('update-button');
     
     // Base URL for the microservice - can be changed for different deployments
-    const serviceUrl = 'http://localhost:8080';
+    let serviceUrl = 'http://localhost:8080';
+    
+    // Function to get the current service URL
+    function getServiceUrl() {
+        // If a URL has been set via the UI, use it
+        if (window.serviceUrl) {
+            return window.serviceUrl;
+        }
+        // Otherwise use the default URL
+        return serviceUrl;
+    }
     
     // Function to fetch all messages from the server
     function fetchMessages() {
-        return fetch(serviceUrl + '/msg/getAll')
+        return fetch(getServiceUrl() + '/msg/getAll')
             .then(function(response) {
                 return response.json();
             })
@@ -35,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const formattedDate = date.toLocaleTimeString() + ' ' + date.toLocaleDateString();
                 
                 // Create the message text with metadata
-                li.textContent = msgObj.pseudo + ': ' + msgObj.msg + ' (' + formattedDate + ')';
+                li.textContent = msgObj.pseudo + ': ' + msgObj.msg.replace(/\?pseudo=.*$/, '') + ' (' + formattedDate + ')';
             }
             
             messagesList.appendChild(li);
@@ -82,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Send the message to the server
-        fetch(serviceUrl + '/msg/post/' + encodeURIComponent(message) + '?pseudo=' + encodeURIComponent(username))
+        fetch(getServiceUrl() + '/msg/post/' + encodeURIComponent(message) + '?pseudo=' + encodeURIComponent(username))
             .then(function(response) {
                 return response.json();
             })
@@ -108,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to make the service URL configurable
     function setServiceUrl() {
-        const urlInput = prompt('Enter the microservice URL:', serviceUrl);
+        const urlInput = prompt('Enter the microservice URL:', getServiceUrl());
         if (urlInput && urlInput.trim() !== '') {
             window.serviceUrl = urlInput.trim();
             localStorage.setItem('messageBoardServiceUrl', window.serviceUrl);
